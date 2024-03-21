@@ -29,7 +29,8 @@ class BookController extends Controller
 
         $cacheKey = 'books:' . $filter . ':' . $title;
         // $books = cache()->remember($cacheKey ,3600, fn()=> $books->get());
-        $books = $books->get();
+        // $books = $books->get();
+        $books = $books->paginate(10);
 
         return view('books.index', ['books' => $books]);
     }
@@ -60,12 +61,15 @@ class BookController extends Controller
             $cacheKey ,
             3600, 
             fn() => Book::with([
-                'reviews' => fn($query) => $query ->latest()
+                // 'reviews' => fn($query) => $query ->latest()->paginate(10)
+                // 'reviews' => fn($query) => $query ->orderBy('created_at', 'DESC')
+                'reviews' => fn($query) => $query ->orderBy('created_at', 'DESC')
             ])->withAvgRating()->withReviewsCount()->findOrFail($id)
         );
 
+        $reviews = $book->reviews()->latest()->paginate(10);
 
-        return view('books.show',['book' => $book]);
+        return view('books.show',['book' => $book,'reviews' => $reviews]);
     }
 
     /**
